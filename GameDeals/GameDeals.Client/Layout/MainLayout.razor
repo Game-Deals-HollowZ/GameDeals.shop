@@ -1,0 +1,73 @@
+﻿@inherits LayoutComponentBase
+@using GameDeals.Client.Pages
+@inject NavigationManager Navigation
+
+<MudThemeProvider Theme="@_myTheme" />
+
+<MudLayout>
+    <MudAppBar Color="Color.Primary" Elevation="4">
+        <MudText Typo="Typo.h6">GameDeals</MudText>
+        <MudSpacer />
+        <MudTextField @bind-Value="SearchText"
+                      Placeholder="Spiel suchen..."
+                      Adornment="Adornment.Start"
+                      AdornmentIcon="@Icons.Material.Filled.Search"
+                      Class="mx-4" />
+        <MudButton Href="/" Color="Color.Inherit" Variant="Variant.Text">Spiele</MudButton>
+    </MudAppBar>
+
+    <MudMainContent>
+        @Body
+    </MudMainContent>
+</MudLayout>
+
+<CopyrightNotice />
+
+@code{
+    private string? SearchText
+    {
+        get => _searchText;
+        set
+        {
+            if (_searchText == value) return;
+            _searchText = value;
+
+            if (!string.IsNullOrWhiteSpace(_searchText))
+                Navigation.NavigateTo($"/search?query={Uri.EscapeDataString(_searchText)}");
+            else
+                Navigation.NavigateTo("/");
+        }
+    }
+    private string? _searchText;
+
+
+    private MudTheme _myTheme = new MudTheme()
+        {
+            PaletteDark = new PaletteDark()
+            {
+                Primary = Colors.Blue.Accent4,
+                Secondary = Colors.Green.Accent4,
+                Background = "#121212",  // Dunkler Hintergrund
+                Surface = "#1E1E1E",     // Karten-Hintergrund
+                AppbarBackground = "#1F1F1F",
+                TextPrimary = Colors.Gray.Lighten3
+            },
+            Typography = new Typography()
+            {
+                Default = new DefaultTypography()
+                {
+                    FontFamily = new[] { "Poppins", "Segoe UI", "Roboto", "sans-serif" }
+                }
+            },
+            PaletteLight = new PaletteLight()
+            {
+                Primary = Colors.Blue.Accent4,
+                Secondary = Colors.Green.Accent4,
+                Background = "#121212",  // Dunkler Hintergrund
+                Surface = "#1E1E1E",     // Karten-Hintergrund
+                AppbarBackground = "#1F1F1F",
+                TextPrimary = Colors.Gray.Lighten3
+            }
+        };
+
+}

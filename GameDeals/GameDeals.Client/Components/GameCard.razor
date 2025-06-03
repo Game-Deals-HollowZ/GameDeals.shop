@@ -1,0 +1,94 @@
+﻿@using MudBlazor
+@using GameDeals.Shared.Models
+@using GameDeals.Shared.Services
+@inject IsThereAnyDealService ItadService
+
+@code {
+    [Parameter] public IGDBGame Game { get; set; }
+
+    private List<PriceEntry>? prices;
+    private bool isLoading = false;
+
+    private bool showAllPrices = false;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        isLoading = true;
+        if (Game != null && !string.IsNullOrEmpty(Game.Name))
+        {
+            prices = await ItadService.GetPricesByTitleAsync(Game.Name);
+        }
+        else
+        {
+            prices = null;
+        }
+        isLoading = false;
+    }
+
+    private void ToggleShowPrices()
+    {
+        showAllPrices = !showAllPrices;
+    }
+}
+
+@if (Game != null)
+{
+    if (Game.Cover is null || Game.Cover.Url is null)
+    {
+        Game.Cover = new Cover { Url = "" };
+    }
+
+    <MudPaper Class="m-2 p-2" Elevation="3">
+        <MudCard>
+
+            <MudCardMedia Image="@($"https:{Game.Cover.Url.Replace("t_thumb", "t_cover_big")}")" Height="180" />
+
+            <MudCardContent>
+                <MudText Typo="Typo.h6">@Game.Name</MudText>
+                <MudText Typo="Typo.body2">@Game.Summary</MudText>
+
+                @if (isLoading)
+                {
+                    <MudProgressCircular Indeterminate="true" Size="Size.Small" />
+                }
+                else if (prices is not null && prices.Count > 0)
+                {
+                    <MudText Typo="Typo.subtitle1" Class="mt-2 mb-1">Verfügbare Angebote:</MudText>
+
+                    @foreach (var price in prices.Take(showAllPrices ? prices.Count : 4))
+                    {
+                        <MudPaper Class="d-flex align-center justify-space-between px-2 py-1 mb-1" Style="background-color: #222;">
+                            <MudText Typo="Typo.body2">@price.Shop.Name</MudText>
+                            <MudText Color="Color.Primary" Typo="Typo.body1">@price.PriceNew.ToString("C")</MudText>
+                            <MudButton Href="@price.Url" Target="_blank" Color="Color.Secondary" Variant="Variant.Filled" Size="Size.Small">
+                                Zum Shop
+                            </MudButton>
+                        </MudPaper>
+                    }
+
+                    @if (prices.Count > 4)
+                    {
+                        <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="ToggleShowPrices">
+                            @(showAllPrices ? "Weniger anzeigen" : "Mehr anzeigen")
+                        </MudButton>
+                    }
+                }
+                else
+                {
+                    <MudText Typo="Typo.caption" Color="Color.Error">Keine Angebote gefunden.</MudText>
+                }
+            </MudCardContent>
+
+        </MudCard>
+    </MudPaper>
+}
+else
+{
+    <MudPaper Class="m-2 p-2" Elevation="3">
+        <MudCard>
+            <MudCardContent>
+                <MudText Color="Color.Error">Spiel nicht verfügbar.</MudText>
+            </MudCardContent>
+        </MudCard>
+    </MudPaper>
+}

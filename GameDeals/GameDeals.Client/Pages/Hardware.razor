@@ -1,0 +1,58 @@
+﻿@page "/hardware"
+@using GameDeals.Shared.Models
+@inject NavigationManager NavigationManager
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-4">
+    <MudText Typo="Typo.h4" GutterBottom="true">Gaming Hardware</MudText>
+
+    <MudGrid>
+        @foreach (var item in HardwareItems)
+        {
+            <MudItem xs="12" sm="6" md="4">
+                <MudCard Class="ma-2" Style="height: 100%;">
+                    <MudCardMedia Image="@item.ImageUrl" Height="180" />
+                    <MudCardContent>
+                        <MudText Typo="Typo.h6">@item.Name</MudText>
+                        <MudText Typo="Typo.body2" Class="mb-2">@item.Description</MudText>
+                        <MudText Typo="Typo.subtitle2" Color="Color.Secondary">€ @item.Price</MudText>
+                    </MudCardContent>
+                    <MudCardActions>
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="@item.AffiliateLink" Target="_blank">
+                            Jetzt kaufen
+                        </MudButton>
+                    </MudCardActions>
+                </MudCard>
+            </MudItem>
+        }
+    </MudGrid>
+</MudContainer>
+
+@code {
+    private List<HardwareItem> HardwareItems = new()
+    {
+        new HardwareItem
+        {
+            Name = "Razer BlackWidow V3",
+            Description = "Mechanische Gaming-Tastatur mit RGB-Beleuchtung",
+            ImageUrl = "https://example.com/images/razer_blackwidow.jpg",
+            Price = 129.99M,
+            AffiliateLink = "https://affiliate.example.com/razer"
+        },
+        new HardwareItem
+        {
+            Name = "Logitech G502 X",
+            Description = "Hochpräzise Gaming-Maus mit programmierbaren Tasten",
+            ImageUrl = "https://example.com/images/logitech_g502.jpg",
+            Price = 89.99M,
+            AffiliateLink = "https://affiliate.example.com/logitech"
+        },
+        new HardwareItem
+        {
+            Name = "SteelSeries Arctis Nova Pro",
+            Description = "Premium-Gaming-Headset mit 3D-Audio",
+            ImageUrl = "https://example.com/images/steelseries_arctis.jpg",
+            Price = 199.99M,
+            AffiliateLink = "https://affiliate.example.com/steelseries"
+        }
+    };
+}

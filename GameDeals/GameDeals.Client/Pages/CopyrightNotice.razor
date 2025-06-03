@@ -1,0 +1,85 @@
+﻿@code {
+    protected override async Task OnInitializedAsync()
+    {
+        ShowSection("urheberrecht");
+    }
+
+    private string activeSection = "";
+
+    private void ShowSection(string section)
+    {
+        activeSection = section;
+    }
+}
+
+<MudPaper Class="p-4 mt-6" Style="background-color: #1e1e1e; color: white;">
+    <MudText Typo="Typo.subtitle2">
+        <MudLink Href="#" OnClick="@(() => ShowSection("impressum"))">Impressum</MudLink> |
+        <MudLink Href="#" OnClick="@(() => ShowSection("datenschutz"))">Datenschutz</MudLink> |
+        <MudLink Href="#" OnClick="@(() => ShowSection("haftung"))">Haftungsausschluss</MudLink> |
+        <MudLink Href="#" OnClick="@(() => ShowSection("urheberrecht"))">Urheberrecht</MudLink>
+    </MudText>
+
+    <MudDivider Class="my-2" />
+
+    @if (!string.IsNullOrEmpty(activeSection))
+    {
+        <MudText Typo="Typo.body2" Class="mt-2 copyright-notice" Style="font-size: 0.8rem; color: gray; padding: 1rem; margin-top: 2rem; border-top: 1px solid #ccc;">
+            @switch (activeSection)
+            {
+                case "impressum":
+                    <h5>Impressum</h5>
+                    <p>
+                        Sergej Zelenskij,
+                    </p>
+                    <p>
+                        Am Wildwechsel 25,
+                    </p>
+                    <p>
+                        49811 Lingen(Ems)
+                    </p>
+                    <p>
+                        <MudLink Href="mailto:game.deals.kontakt@gmail.com" Target="_blank" Color="Color.Primary">
+                            game.deals.kontakt@gmail.com
+                        </MudLink>
+                    </p>
+                    break;
+
+                case "datenschutz":
+                    <h5>Datenschutz</h5>
+                    <p>
+                        Es werden keine personenbezogenen Daten ohne Zustimmung erhoben. Drittanbieter wie IGDB und IsThereAnyDeal können eigene Daten erheben.
+                    </p>
+                    break;
+
+                case "haftung":
+                    <h5>Haftungsausschluss</h5>
+                    <p>
+                        Trotz sorgfältiger inhaltlicher Kontrolle übernehmen wir keine Haftung für externe Links. Für Inhalte verlinkter Seiten sind ausschließlich deren Betreiber verantwortlich.
+                    </p>
+                    break;
+
+                case "urheberrecht":
+                    <h5>Urheberrecht und Rechtehinweise</h5>
+                    <p>
+                        Alle Inhalte dieser Webseite, insbesondere die bereitgestellten Spieledaten und Preisvergleiche, basieren auf Daten, die über die
+                        <a href="https://isthereanydeal.com/" target="_blank" rel="noopener noreferrer">IsThereAnyDeal API</a> und die
+                        <a href="https://www.igdb.com/" target="_blank" rel="noopener noreferrer">IGDB API (Internet Game Database)</a> abgerufen werden.
+                    </p>
+                    <p>
+                        Diese APIs sind Eigentum und unterliegen den Nutzungsbedingungen der jeweiligen Anbieter.
+                    </p>
+                    <p>
+                        Die Rechte an den durch die APIs bereitgestellten Daten liegen bei den jeweiligen Anbietern bzw. Rechteinhabern.
+                        Die Verwendung der Daten erfolgt im Rahmen der von den API-Anbietern erlaubten Nutzung.
+                        Eine weitergehende Verwendung, Vervielfältigung oder Verbreitung der Daten ohne ausdrückliche Genehmigung ist untersagt.
+                    </p>
+                    <p>
+                        Alle weiteren Inhalte, Texte, Grafiken und Designelemente dieser Webseite sind urheberrechtlich geschützt und dürfen ohne ausdrückliche schriftliche Zustimmung nicht verwendet werden.
+                    </p>
+                    break;
+            }
+        </MudText>
+    }
+</MudPaper>
+

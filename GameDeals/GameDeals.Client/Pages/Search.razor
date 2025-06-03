@@ -1,0 +1,51 @@
+﻿@page "/search"
+@using GameDeals.Shared.Models
+@using GameDeals.Client.Components
+@using GameDeals.Client.Services
+@using GameDeals.Shared.Services
+@inject IGDBService IGDB
+
+<PageTitle>Suche</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Large">
+    <MudText Typo="Typo.h4" Class="mt-4 mb-4">Suchergebnisse für "@Query"</MudText>
+
+    @if (IsLoading)
+    {
+        <MudProgressCircular Indeterminate="true" Color="Color.Primary" />
+    }
+    else if (_games?.Any() == true)
+    {
+        <MudGrid>
+            @foreach (var game in _games)
+            {
+                <MudItem xs="12" sm="6" md="4" lg="3">
+                    <GameCard Game="@game" />
+                </MudItem>
+            }
+        </MudGrid>
+    }
+    else
+    {
+        <MudText>Keine Spiele gefunden.</MudText>
+    }
+</MudContainer>
+
+@code {
+    [Parameter]
+    [SupplyParameterFromQuery]
+    public string? Query { get; set; }
+
+    private List<IGDBGame>? _games;
+    private bool IsLoading = true;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (!string.IsNullOrWhiteSpace(Query))
+        {
+            IsLoading = true;
+            _games = await IGDB.SearchGamesAsync(Query);
+            IsLoading = false;
+        }
+    }
+}

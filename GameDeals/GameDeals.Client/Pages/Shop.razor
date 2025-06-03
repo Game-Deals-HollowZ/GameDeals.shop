@@ -1,0 +1,54 @@
+﻿@page "/"
+@using GameDeals.Client.Components
+@using GameDeals.Client.Services
+@using GameDeals.Shared.Models
+@using GameDeals.Shared.Services
+@implements IDisposable
+@inject IGDBService IGDB
+@inject PersistentComponentState ApplicationState
+
+<MudContainer MaxWidth="MaxWidth.Large">
+    <MudText Typo="Typo.h4" Class="mt-4 mb-4">Aktuelle Gaming-Deals</MudText>
+
+    <MudGrid>
+        @foreach (var game in _games)
+        {
+            <MudItem xs="12" sm="6" md="4" lg="3">
+                <GameCard Game="@game" />
+            </MudItem>
+        }
+    </MudGrid>
+</MudContainer>
+
+@code {
+    private const string gamesDataKey = "GamesData";
+    private List<IGDBGame>? _games = new();
+    private PersistingComponentStateSubscription persistingSubscription;
+
+    protected override async Task OnInitializedAsync()
+    {
+        //_games = await IGDB.GetGamesAsync();
+        persistingSubscription = ApplicationState.RegisterOnPersisting(PersistData);
+
+        if (!ApplicationState.TryTakeFromJson<List<IGDBGame>>(gamesDataKey, out var restored))
+        {
+            _games = await IGDB.GetGamesAsync();
+        }
+        else
+        {
+            _games = restored;
+        }
+    }
+
+    private Task PersistData()
+    {
+        ApplicationState.PersistAsJson(gamesDataKey, _games);
+
+        return Task.CompletedTask;
+    }
+
+    void IDisposable.Dispose()
+    {
+        persistingSubscription.Dispose();
+    }
+}

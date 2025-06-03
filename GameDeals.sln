@@ -1,0 +1,34 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.12.35707.178
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameDeals", "GameDeals\GameDeals\GameDeals.csproj", "{2D97F07C-B222-4079-A1C3-6896A03F41B7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameDeals.Client", "GameDeals\GameDeals.Client\GameDeals.Client.csproj", "{2B0446FE-4924-4C6F-AF9F-BFCC93ABF57D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameDeals.Shared", "GameDeals.Shared\GameDeals.Shared.csproj", "{CE6410D3-186B-46DE-A5C7-2F4A35904574}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{2D97F07C-B222-4079-A1C3-6896A03F41B7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2D97F07C-B222-4079-A1C3-6896A03F41B7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2D97F07C-B222-4079-A1C3-6896A03F41B7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2D97F07C-B222-4079-A1C3-6896A03F41B7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2B0446FE-4924-4C6F-AF9F-BFCC93ABF57D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2B0446FE-4924-4C6F-AF9F-BFCC93ABF57D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2B0446FE-4924-4C6F-AF9F-BFCC93ABF57D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2B0446FE-4924-4C6F-AF9F-BFCC93ABF57D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CE6410D3-186B-46DE-A5C7-2F4A35904574}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CE6410D3-186B-46DE-A5C7-2F4A35904574}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CE6410D3-186B-46DE-A5C7-2F4A35904574}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CE6410D3-186B-46DE-A5C7-2F4A35904574}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
