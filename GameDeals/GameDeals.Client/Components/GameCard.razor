@@ -6,24 +6,18 @@
 @code {
     [Parameter] public IGDBGame Game { get; set; }
 
-    private List<PriceEntry>? prices;
+    private List<PriceEntry>? prices => Game.Prices;
+
+    private string ShortSummary =>
+        string.IsNullOrWhiteSpace(Game?.Summary)
+            ? "Keine Beschreibung verfügbar."
+            : Game.Summary.Length > 150
+                ? Game.Summary.Substring(0, 147) + "..."
+                : Game.Summary;
+
     private bool isLoading = false;
 
     private bool showAllPrices = false;
-
-    protected override async Task OnParametersSetAsync()
-    {
-        isLoading = true;
-        if (Game != null && !string.IsNullOrEmpty(Game.Name))
-        {
-            prices = await ItadService.GetPricesByTitleAsync(Game.Name);
-        }
-        else
-        {
-            prices = null;
-        }
-        isLoading = false;
-    }
 
     private void ToggleShowPrices()
     {
@@ -37,48 +31,43 @@
     {
         Game.Cover = new Cover { Url = "" };
     }
-
     <MudPaper Class="m-2 p-2" Elevation="3">
-        <MudCard>
+        <MudCard Class="game-card">
 
             <MudCardMedia Image="@($"https:{Game.Cover.Url.Replace("t_thumb", "t_cover_big")}")" Height="180" />
 
-            <MudCardContent>
-                <MudText Typo="Typo.h6">@Game.Name</MudText>
-                <MudText Typo="Typo.body2">@Game.Summary</MudText>
+            <MudCardContent Class="flex-grow-1 d-flex flex-column justify-between">
+                <MudText Typo="Typo.h6" Class="mb-1">@Game.Name</MudText>
 
-                @if (isLoading)
+                <MudText Typo="Typo.body2" Class="description mb-2">@ShortSummary</MudText>
+
+                @if (prices is not null && prices.Count > 0)
                 {
-                    <MudProgressCircular Indeterminate="true" Size="Size.Small" />
-                }
-                else if (prices is not null && prices.Count > 0)
-                {
-                    <MudText Typo="Typo.subtitle1" Class="mt-2 mb-1">Verfügbare Angebote:</MudText>
+                    <MudText Typo="Typo.subtitle2" Class="mb-1">Ab @prices.Min(p => p.PriceNew).ToString("C")</MudText>
 
-                    @foreach (var price in prices.Take(showAllPrices ? prices.Count : 4))
-                    {
-                        <MudPaper Class="d-flex align-center justify-space-between px-2 py-1 mb-1" Style="background-color: #222;">
-                            <MudText Typo="Typo.body2">@price.Shop.Name</MudText>
-                            <MudText Color="Color.Primary" Typo="Typo.body1">@price.PriceNew.ToString("C")</MudText>
-                            <MudButton Href="@price.Url" Target="_blank" Color="Color.Secondary" Variant="Variant.Filled" Size="Size.Small">
-                                Zum Shop
-                            </MudButton>
-                        </MudPaper>
-                    }
+                    <MudButton Variant="Variant.Text" Size="Size.Small" OnClick="ToggleShowPrices">
+                        @(showAllPrices ? "Angebote ausblenden" : "Angebote anzeigen")
+                    </MudButton>
 
-                    @if (prices.Count > 4)
+                    @if (showAllPrices)
                     {
-                        <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="ToggleShowPrices">
-                            @(showAllPrices ? "Weniger anzeigen" : "Mehr anzeigen")
-                        </MudButton>
+                        @foreach (var price in prices.Take(4))
+                        {
+                            <MudPaper Class="d-flex align-center justify-space-between px-2 py-1 mb-1" Style="background-color: #222;">
+                                <MudText Typo="Typo.caption">@price.Shop.Name</MudText>
+                                <MudText Typo="Typo.caption" Color="Color.Primary">@price.PriceNew.ToString("C")</MudText>
+                                <MudButton Href="@price.Url" Target="_blank" Color="Color.Secondary" Variant="Variant.Text" Size="Size.Small">
+                                    Shop
+                                </MudButton>
+                            </MudPaper>
+                        }
                     }
                 }
                 else
                 {
-                    <MudText Typo="Typo.caption" Color="Color.Error">Keine Angebote gefunden.</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Error">Keine Angebote</MudText>
                 }
             </MudCardContent>
-
         </MudCard>
     </MudPaper>
 }

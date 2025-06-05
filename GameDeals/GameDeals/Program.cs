@@ -1,5 +1,6 @@
 using GameDeals.Components;
 using GameDeals.Services;
+using GameDeals.Shared.Data;
 using GameDeals.Shared.Services;
 using MudBlazor.Services;
 
@@ -10,12 +11,20 @@ var clientOrigin = "https://localhost:7142";
 
 builder.Services.AddMudServices();
 
-builder.Services.AddControllers();
+builder.Services.AddControllers().AddJsonOptions(options =>
+{
+    options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.Preserve;
+});
+
 
 builder.Services.AddHttpClient(); // HttpClientFactory verfügbar machen
 
+builder.Services.AddHostedService<DailyRefreshService>();
+
 builder.Services.AddScoped<TwitchTokenService>();
 builder.Services.AddScoped<IGDBService, IGDBServerService>();
+builder.Services.AddDbContext<AppDbContext>();
+
 
 // Für IsThereAnyDealServer wird HttpClient injiziert via IHttpClientFactory, daher:
 // Du kannst optional einen benannten Client definieren, hier einfach Standard:
@@ -77,6 +86,16 @@ app.MapGet("/api/games/search", async (string query, IGDBService igdb) =>
 
     var games = await igdb.SearchGamesAsync(query);
     return Results.Ok(games);
+});
+
+app.MapGet("/api/games/paged", async (IGDBService igdb, int offset = 0, int limit = 12) =>
+{
+    return await igdb.GetGamesPagedAsync(offset, limit);
+});
+
+app.MapGet("/api/games/searchpaged", async (string query, IGDBService igdb, int offset = 0, int limit = 12) =>
+{
+    return await igdb.SearchGamesPagedAsync(query, offset, limit);
 });
 
 

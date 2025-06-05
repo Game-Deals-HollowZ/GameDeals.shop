@@ -2,6 +2,7 @@
 using GameDeals.Shared.Services;
 using System.Net.Http;
 using System.Net.Http.Json;
+using System.Text.Json;
 
 namespace GameDeals.Client.Services
 {
@@ -37,8 +38,18 @@ namespace GameDeals.Client.Services
             if (string.IsNullOrWhiteSpace(title))
                 return new List<PriceEntry>();
 
-            // ruft GET api/IsThereAnyDeal/pricesByTitle?title={title} auf
-            return await _http.GetFromJsonAsync<List<PriceEntry>>($"api/IsThereAnyDeal/pricesByTitle?title={Uri.EscapeDataString(title)}") ?? new List<PriceEntry>();
+            var response = await _http.GetAsync($"api/IsThereAnyDeal/pricesByTitle?title={Uri.EscapeDataString(title)}");
+            response.EnsureSuccessStatusCode();
+
+            var json = await response.Content.ReadAsStringAsync();
+            Console.WriteLine(json);  // oder Debug-Ausgabe
+
+            // Falls JSON kein Array ist, hier anpassen
+            return JsonSerializer.Deserialize<List<PriceEntry>>(json, new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true,
+                ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.Preserve
+            }) ?? new List<PriceEntry>();
         }
     }
 }

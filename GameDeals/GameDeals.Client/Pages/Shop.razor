@@ -1,54 +1,122 @@
 ﻿@page "/"
 @using GameDeals.Client.Components
-@using GameDeals.Client.Services
-@using GameDeals.Shared.Models
 @using GameDeals.Shared.Services
-@implements IDisposable
+@using Microsoft.EntityFrameworkCore
 @inject IGDBService IGDB
+@inject IJSRuntime JS
+@inject IsThereAnyDealService Itad
 @inject PersistentComponentState ApplicationState
+@implements IDisposable
 
 <MudContainer MaxWidth="MaxWidth.Large">
     <MudText Typo="Typo.h4" Class="mt-4 mb-4">Aktuelle Gaming-Deals</MudText>
 
-    <MudGrid>
-        @foreach (var game in _games)
+    <div @ref="_scrollContainer" style="height: 800px; overflow-y: auto;" onscroll="@HandleScroll">
+        <MudGrid>
+            @foreach (var game in _games)
+            {
+                <MudItem xs="12" sm="6" md="4" lg="3">
+                    <GameCard Game="@game" />
+                </MudItem>
+            }
+        </MudGrid>
+
+        @if (isLoadingMore)
         {
-            <MudItem xs="12" sm="6" md="4" lg="3">
-                <GameCard Game="@game" />
-            </MudItem>
+            <MudProgressCircular Indeterminate="true" Class="mt-4" />
         }
-    </MudGrid>
+    </div>
 </MudContainer>
 
 @code {
-    private const string gamesDataKey = "GamesData";
-    private List<IGDBGame>? _games = new();
-    private PersistingComponentStateSubscription persistingSubscription;
+    private const string StateKey = "InitialGameData";
+    private List<IGDBGame> _games = new();
+    private ElementReference _scrollContainer;
+    private int _offset = 0;
+    private const int _pageSize = 12;
+    private bool isLoadingMore = false;
+    private bool allLoaded = false;
+
+    private PersistingComponentStateSubscription? _subscription;
 
     protected override async Task OnInitializedAsync()
     {
-        //_games = await IGDB.GetGamesAsync();
-        persistingSubscription = ApplicationState.RegisterOnPersisting(PersistData);
-
-        if (!ApplicationState.TryTakeFromJson<List<IGDBGame>>(gamesDataKey, out var restored))
+        // Versuche, gespeicherten Zustand zu holen
+        if (!ApplicationState.TryTakeFromJson<List<IGDBGame>>(StateKey, out var restored))
         {
-            _games = await IGDB.GetGamesAsync();
+            _offset = 0;
+            await LoadMoreGamesFromDb();
         }
         else
         {
-            _games = restored;
+            _games = restored!;
+            _offset = _games.Count;
         }
+
+        _subscription = ApplicationState.RegisterOnPersisting(PersistState);
     }
 
-    private Task PersistData()
+    private Task PersistState()
     {
-        ApplicationState.PersistAsJson(gamesDataKey, _games);
-
+        ApplicationState.PersistAsJson(StateKey, _games);
         return Task.CompletedTask;
     }
 
-    void IDisposable.Dispose()
+    private async Task LoadMoreGamesFromDb()
     {
-        persistingSubscription.Dispose();
+        if (isLoadingMore || allLoaded)
+            return;
+
+        isLoadingMore = true;
+
+        // Spiele inkl. Cover und Preise aus DB laden, paginiert
+        var gamesFromDb = await IGDB.LoadMoreGamesFromDb(_offset, _pageSize);
+
+        // Mapping von Entity -> IGDBGame (falls du die UI mit IGDBGame verwendest)
+        var mappedGames = gamesFromDb.Select(g => new IGDBGame
+        {
+            Name = g.Name,
+            Summary = g.Summary,
+            Rating = g.Rating,
+            First_Release_Date = g.FirstReleaseDate,
+            GameType = g.GameType,
+            Cover = g.Cover == null ? null : new Cover { Url = g.Cover.Url },
+            Prices = g.Prices?.Select(p => new PriceEntry
+            {
+                Shop = new ShopInfo { Name = p.ShopName },
+                PriceNew = p.PriceNew,
+                Url = p.Url
+            }).ToList()
+        }).ToList();
+
+        _games.AddRange(mappedGames);
+
+        _offset += mappedGames.Count;
+
+        if (mappedGames.Count < _pageSize)
+            allLoaded = true;
+
+        isLoadingMore = false;
+        StateHasChanged();
+    }
+
+    private async Task HandleScroll()
+    {
+        if (isLoadingMore || allLoaded)
+            return;
+
+        var scrollHeight = await JS.InvokeAsync<int>("getScrollHeight", _scrollContainer);
+        var scrollTop = await JS.InvokeAsync<int>("getScrollTop", _scrollContainer);
+        var clientHeight = await JS.InvokeAsync<int>("getClientHeight", _scrollContainer);
+
+        if (scrollTop + clientHeight >= scrollHeight - 200)
+        {
+            await LoadMoreGamesFromDb();
+        }
+    }
+
+    public void Dispose()
+    {
+        _subscription?.Dispose();
     }
 }

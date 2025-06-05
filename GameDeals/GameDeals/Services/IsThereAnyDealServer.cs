@@ -78,7 +78,8 @@ namespace GameDeals.Services
                     var shop = deal.GetProperty("shop").GetProperty("name").GetString();
                     var price = deal.GetProperty("price").GetProperty("amount").GetDecimal();
                     var urlLink = deal.GetProperty("url").GetString();
-
+                    if (price <= 0.01m || shop == null || shop.ToLower().Contains("mod"))
+                        continue;
                     result.Add(new PriceEntry
                     {
                         Shop = new ShopInfo { Name = shop },

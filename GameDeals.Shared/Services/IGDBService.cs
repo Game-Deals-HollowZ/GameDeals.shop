@@ -1,4 +1,5 @@
-﻿using GameDeals.Shared.Models;
+﻿using GameDeals.Shared.Entities;
+using GameDeals.Shared.Models;
 using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
@@ -15,6 +16,10 @@ namespace GameDeals.Shared.Services
         Task<List<IGDBGame>> GetGamesAsync();
 
         Task<List<IGDBGame>> SearchGamesAsync(string query);
+        Task<List<IGDBGame>> GetGamesPagedAsync(int offset, int limit);
+        Task<List<IGDBGame>> SearchGamesPagedAsync(string query, int offset, int limit);
+
+        Task<List<IGDBGameEntity>> LoadMoreGamesFromDb(int offset, int limit);
     }
 
 }

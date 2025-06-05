@@ -1,21 +1,16 @@
 ﻿@page "/search"
-@using GameDeals.Shared.Models
 @using GameDeals.Client.Components
-@using GameDeals.Client.Services
 @using GameDeals.Shared.Services
+@using Microsoft.AspNetCore.WebUtilities
 @inject IGDBService IGDB
-
-<PageTitle>Suche</PageTitle>
+@inject IJSRuntime JS
+@inject IsThereAnyDealService Itad
+@inject NavigationManager Navigation
 
 <MudContainer MaxWidth="MaxWidth.Large">
-    <MudText Typo="Typo.h4" Class="mt-4 mb-4">Suchergebnisse für "@Query"</MudText>
+    <MudText Typo="Typo.h4" Class="mt-4 mb-4">Aktuelle Gaming-Deals</MudText>
 
-    @if (IsLoading)
-    {
-        <MudProgressCircular Indeterminate="true" Color="Color.Primary" />
-    }
-    else if (_games?.Any() == true)
-    {
+    <div @ref="_scrollContainer" style="height: 800px; overflow-y: auto;" onscroll="@HandleScroll">
         <MudGrid>
             @foreach (var game in _games)
             {
@@ -24,11 +19,12 @@
                 </MudItem>
             }
         </MudGrid>
-    }
-    else
-    {
-        <MudText>Keine Spiele gefunden.</MudText>
-    }
+
+        @if (isLoadingMore)
+        {
+            <MudProgressCircular Indeterminate="true" Class="mt-4" />
+        }
+    </div>
 </MudContainer>
 
 @code {
@@ -36,16 +32,91 @@
     [SupplyParameterFromQuery]
     public string? Query { get; set; }
 
-    private List<IGDBGame>? _games;
-    private bool IsLoading = true;
+    private List<IGDBGame> _games = new();
+    private ElementReference _scrollContainer;
+    private int _offset = 0;
+    private const int _pageSize = 12;
+    private bool isLoadingMore = false;
+    private bool allLoaded = false;
+
+    private string? _lastQuery;
 
     protected override async Task OnParametersSetAsync()
     {
-        if (!string.IsNullOrWhiteSpace(Query))
+        if (_lastQuery != Query)
         {
-            IsLoading = true;
-            _games = await IGDB.SearchGamesAsync(Query);
-            IsLoading = false;
+            _lastQuery = Query;
+            _games.Clear();
+            _offset = 0;
+            allLoaded = false;
+            await LoadMoreGames();
+        }
+    }
+
+
+
+    private async Task LoadMoreGames()
+    {
+        if (isLoadingMore || allLoaded)
+            return;
+
+        isLoadingMore = true;
+
+        const int maxTries = 2; // Begrenzung gegen Endlosschleifen
+        int tries = 0;
+
+        while (!allLoaded && tries < maxTries)
+        {
+            List<IGDBGame> newGames = string.IsNullOrWhiteSpace(Query)
+                ? await IGDB.GetGamesPagedAsync(_offset, _pageSize)
+                : await IGDB.SearchGamesPagedAsync(Query, _offset, _pageSize);
+
+            if (newGames == null || newGames.Count == 0)
+            {
+                allLoaded = true;
+                break;
+            }
+
+            var filteredGames = new List<IGDBGame>();
+
+            foreach (var game in newGames)
+            {
+                var prices = await Itad.GetPricesByTitleAsync(game.Name);
+                if (prices.Any(p => p.PriceNew > 0.5m))
+                {
+                    game.Prices = prices;
+                    filteredGames.Add(game);
+                }
+            }
+
+            _offset += _pageSize;
+            tries++;
+
+            if (filteredGames.Any())
+            {
+                _games.AddRange(filteredGames);
+                break;
+            }
+
+            // Falls keine gefilterten Spiele dabei waren, nächste Seite versuchen
+        }
+
+        isLoadingMore = false;
+        StateHasChanged();
+    }
+
+
+    // Scroll-Handler bleibt gleich, aber falls gewünscht hier mit Debug etc.
+
+    private async Task HandleScroll()
+    {
+        var scrollHeight = await JS.InvokeAsync<int>("getScrollHeight", _scrollContainer);
+        var scrollTop = await JS.InvokeAsync<int>("getScrollTop", _scrollContainer);
+        var clientHeight = await JS.InvokeAsync<int>("getClientHeight", _scrollContainer);
+
+        if (scrollTop + clientHeight >= scrollHeight - 200)
+        {
+            await LoadMoreGames();
         }
     }
 }
